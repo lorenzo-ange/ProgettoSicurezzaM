@@ -21,10 +21,7 @@ import javax.crypto.spec.DHParameterSpec;
 
 public class ServerThread implements Runnable {
 
-	private int serverPort = 8412;
-
-	public ServerThread() {
-	}
+	private static int serverPort = 8412;
 
 	public void run() {
 		// Socket in ascolto su localhost
@@ -69,16 +66,16 @@ public class ServerThread implements Runnable {
 			try {
 				SecretKey key = AESDHKeyAgreement(outSocket, inSocket);
 
-				String cleartext = receiveAESCryptedString(key, outSocket, inSocket);
+				String cleartext = receiveAESCryptedString(key, inSocket);
 				System.out.println("Server: decrypted text: "+cleartext);
 
 				int times = Integer.parseInt(cleartext);
 				for(int i = 0; i<times; i++) {
 					String SysLoadAvg = String.valueOf(ManagementFactory.getOperatingSystemMXBean().getSystemLoadAverage());
-					sendAESCryptedString(SysLoadAvg, key, outSocket, inSocket);
+					sendAESCryptedString(SysLoadAvg, key, outSocket);
 					Thread.sleep(2000);
 				}
-				sendAESCryptedString("stop", key, outSocket, inSocket);
+				sendAESCryptedString("stop", key, outSocket);
 
 			} catch (Exception e) {
 				System.out.println("Server: ERROR");
@@ -140,7 +137,7 @@ public class ServerThread implements Runnable {
 		return serverKeyAgree.generateSecret("AES");
 	}
 
-	private void sendAESCryptedString(String cleartext, SecretKey key, ObjectOutputStream outSocket, ObjectInputStream inSocket) throws Exception {
+	private void sendAESCryptedString(String cleartext, SecretKey key, ObjectOutputStream outSocket) throws Exception {
 		Cipher cipher = Cipher.getInstance("AES/CBC/PKCS5Padding");
 		cipher.init(Cipher.ENCRYPT_MODE, key);
 
@@ -151,7 +148,7 @@ public class ServerThread implements Runnable {
 		outSocket.writeObject(ciphertext);
 	}
 
-	private String receiveAESCryptedString(SecretKey key, ObjectOutputStream outSocket, ObjectInputStream inSocket) throws Exception {
+	private String receiveAESCryptedString(SecretKey key, ObjectInputStream inSocket) throws Exception {
 		byte[] encodedParams = (byte[]) inSocket.readObject();
 		AlgorithmParameters params = AlgorithmParameters.getInstance("AES");
 		params.init(encodedParams);

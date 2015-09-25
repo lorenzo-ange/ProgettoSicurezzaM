@@ -19,11 +19,8 @@ import javax.crypto.spec.DHParameterSpec;
 
 public class ClientThread implements Runnable {
 
-	private int serverPort = 8412;
-	private String serverAddr = "localhost";
-
-	public ClientThread() {
-	}
+	private static int serverPort = 8412;
+	private static String serverAddr = "localhost";
 
 	public void run() {
 
@@ -54,11 +51,11 @@ public class ClientThread implements Runnable {
 			SecretKey key = AESDHKeyAgreement(outSocket, inSocket);
 
 			String times = String.valueOf(4);
-			sendAESCryptedString(times, key, outSocket, inSocket);
+			sendAESCryptedString(times, key, outSocket);
 
 			String cleartext;
 			do {
-				cleartext = receiveAESCryptedString(key, outSocket, inSocket);
+				cleartext = receiveAESCryptedString(key, inSocket);
 				System.out.println("Client: decrypted text: "+cleartext);
 			} while(!cleartext.equals("stop"));
 
@@ -120,7 +117,7 @@ public class ClientThread implements Runnable {
 		return clientKeyAgree.generateSecret("AES");
 	}
 
-	private void sendAESCryptedString(String cleartext, SecretKey key, ObjectOutputStream outSocket, ObjectInputStream inSocket) throws Exception {
+	private void sendAESCryptedString(String cleartext, SecretKey key, ObjectOutputStream outSocket) throws Exception {
 		Cipher cipher = Cipher.getInstance("AES/CBC/PKCS5Padding");
 		cipher.init(Cipher.ENCRYPT_MODE, key);
 		byte[] encodedParams = cipher.getParameters().getEncoded();
@@ -129,7 +126,7 @@ public class ClientThread implements Runnable {
 		outSocket.writeObject(ciphertext);
 	}
 
-	private String receiveAESCryptedString(SecretKey key, ObjectOutputStream outSocket, ObjectInputStream inSocket) throws Exception {
+	private String receiveAESCryptedString(SecretKey key, ObjectInputStream inSocket) throws Exception {
 		byte[] encodedParams = (byte[]) inSocket.readObject();
 		AlgorithmParameters params = AlgorithmParameters.getInstance("AES");
 		params.init(encodedParams);

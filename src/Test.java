@@ -2,7 +2,7 @@ import diffiehellman.client.ClientThread;
 import diffiehellman.server.ServerThread;
 
 
-public class Test {
+public abstract class Test {
 
 	public static void main(String[] args) {
 
